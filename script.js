@@ -36,7 +36,11 @@ function updateChapter() {
   colorIndex = 0;
 
   // Update display
-  chapterDisplay.textContent = `Chapter: ${currentChapter}`;
+  chapterDisplay.textContent = `lvl ${currentChapter + 1}`;
+
+  // Update button states
+  prevButton.disabled = currentChapter === 0;
+  nextButton.disabled = currentChapter === chapters.length - 1;
 
   // Set initial color
   container.style.backgroundColor = chapters[currentChapter].colors[0];
