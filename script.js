@@ -37,7 +37,6 @@ async function getLocalIP() {
   try {
     const response = await fetch("https://api.ipify.org?format=json");
     const data = await response.json();
-    console.log("Got IP address:", data.ip);
     return data.ip;
   } catch (error) {
     console.error("Error getting IP:", error);
@@ -47,17 +46,12 @@ async function getLocalIP() {
 
 // Generate a network-aware peer ID
 function generatePeerId(ip) {
-  // Convert IP to a valid format by removing dots and adding a random suffix
-  const ipPart = ip.replace(/\./g, "");
   const random = Math.random().toString(36).substring(2, 8);
-  const peerId = `peer${ipPart}${random}`;
-  console.log("Generated peer ID:", peerId);
-  return peerId;
+  return `${ip}-${random}`;
 }
 
 // Initialize PeerJS
 async function initializePeer() {
-  console.log("Initializing peer...");
   localIP = await getLocalIP();
   const peerId = generatePeerId(localIP);
 
@@ -69,11 +63,9 @@ async function initializePeer() {
   });
 
   peer.on("open", (id) => {
-    console.log("Peer connection opened with ID:", id);
-    // Set the peer ID display immediately
+    console.log("My peer ID is: " + id);
     peerIdDisplay.textContent = id;
 
-    // Set up copy button functionality
     copyButton.onclick = () => {
       navigator.clipboard.writeText(id);
       copyButton.textContent = "Copied!";
@@ -86,12 +78,6 @@ async function initializePeer() {
 
     // Try to connect to other peers on the same network
     tryConnectToNetworkPeers();
-  });
-
-  // Add error handling
-  peer.on("error", (error) => {
-    console.error("PeerJS error:", error);
-    peerIdDisplay.textContent = "Connection error";
   });
 
   peer.on("connection", (conn) => {
@@ -118,11 +104,11 @@ async function initializePeer() {
 async function tryConnectToNetworkPeers() {
   try {
     // Get the network prefix (first three octets of IP)
-    const networkPrefix = localIP.split(".").slice(0, 3).join("");
+    const networkPrefix = localIP.split(".").slice(0, 3).join(".");
 
     // Try to connect to potential peers on the same network
     for (let i = 1; i < 255; i++) {
-      const potentialPeerId = `peer${networkPrefix}${i}`;
+      const potentialPeerId = `${networkPrefix}.${i}-`;
       if (potentialPeerId !== peer.id) {
         try {
           const conn = peer.connect(potentialPeerId);
@@ -130,7 +116,6 @@ async function tryConnectToNetworkPeers() {
 
           conn.on("open", () => {
             console.log("Connected to peer:", potentialPeerId);
-            updateConnectionStatus(connections.size);
           });
 
           conn.on("data", (data) => {
@@ -143,7 +128,6 @@ async function tryConnectToNetworkPeers() {
           conn.on("close", () => {
             connections.delete(conn);
             console.log("Disconnected from peer:", potentialPeerId);
-            updateConnectionStatus(connections.size);
           });
         } catch (error) {
           // Ignore connection errors - they're expected for non-existent peers
