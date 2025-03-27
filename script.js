@@ -32,14 +32,19 @@ function calculateNextStartTime(interval) {
   return nextStart;
 }
 
+function calculateCurrentColorIndex(interval, colors) {
+  const now = Date.now();
+  const startTime = Math.floor(now / interval) * interval;
+  const elapsed = now - startTime;
+  const step = Math.floor(elapsed / interval);
+  return step % colors.length;
+}
+
 function updateChapter() {
   // Clear existing interval
   if (intervalId) {
     clearInterval(intervalId);
   }
-
-  // Reset color index
-  colorIndex = 0;
 
   // Update display
   chapterDisplay.textContent = `lvl ${currentChapter + 1}`;
@@ -51,8 +56,14 @@ function updateChapter() {
   const currentChapterConfig = chapters[currentChapter];
   const nextStartTime = calculateNextStartTime(currentChapterConfig.interval);
 
-  // Set initial color
-  container.style.backgroundColor = currentChapterConfig.colors[0];
+  // Calculate current color index based on time
+  colorIndex = calculateCurrentColorIndex(
+    currentChapterConfig.interval,
+    currentChapterConfig.colors
+  );
+
+  // Set initial color based on current time
+  container.style.backgroundColor = currentChapterConfig.colors[colorIndex];
 
   // Calculate delay until next start time
   const delay = nextStartTime - Date.now();
