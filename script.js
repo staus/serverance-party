@@ -6,6 +6,7 @@ const chapterDisplay = document.getElementById("chapterDisplay");
 let currentChapter = 0;
 let intervalId = null;
 let colorIndex = 0;
+let timeoutId = null;
 
 const chapters = [
   {
@@ -33,9 +34,14 @@ function calculateNextStartTime(interval) {
 }
 
 function updateChapter() {
-  // Clear existing interval
+  // Clear existing interval and timeout
   if (intervalId) {
     clearInterval(intervalId);
+    intervalId = null;
+  }
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeoutId = null;
   }
 
   // Reset color index
@@ -58,7 +64,7 @@ function updateChapter() {
   const delay = nextStartTime - Date.now();
 
   // Start new interval after the delay
-  setTimeout(() => {
+  timeoutId = setTimeout(() => {
     // Set initial color at start time
     container.style.backgroundColor = currentChapterConfig.colors[0];
 
