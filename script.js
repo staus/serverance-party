@@ -2,6 +2,9 @@ const container = document.getElementById("container");
 const prevButton = document.getElementById("prevChapter");
 const nextButton = document.getElementById("nextChapter");
 const chapterDisplay = document.getElementById("chapterDisplay");
+const peerIdDisplay = document.getElementById("peerId");
+const copyButton = document.getElementById("copyButton");
+const connectionStatus = document.getElementById("connectionStatus");
 
 let currentChapter = 0;
 let intervalId = null;
@@ -61,18 +64,17 @@ async function initializePeer() {
 
   peer.on("open", (id) => {
     console.log("My peer ID is: " + id);
-    // Display the ID somewhere visible for users to share
-    const peerIdDisplay = document.createElement("div");
-    peerIdDisplay.id = "peerIdDisplay";
-    peerIdDisplay.style.position = "fixed";
-    peerIdDisplay.style.top = "10px";
-    peerIdDisplay.style.left = "10px";
-    peerIdDisplay.style.padding = "10px";
-    peerIdDisplay.style.background = "rgba(0,0,0,0.7)";
-    peerIdDisplay.style.color = "white";
-    peerIdDisplay.style.borderRadius = "5px";
-    peerIdDisplay.textContent = `Your ID: ${id}`;
-    document.body.appendChild(peerIdDisplay);
+    peerIdDisplay.textContent = id;
+
+    copyButton.onclick = () => {
+      navigator.clipboard.writeText(id);
+      copyButton.textContent = "Copied!";
+      copyButton.style.background = "#45a049";
+      setTimeout(() => {
+        copyButton.textContent = "Copy ID";
+        copyButton.style.background = "#4CAF50";
+      }, 2000);
+    };
 
     // Try to connect to other peers on the same network
     tryConnectToNetworkPeers();
@@ -81,6 +83,7 @@ async function initializePeer() {
   peer.on("connection", (conn) => {
     connections.add(conn);
     console.log("Connected to peer:", conn.peer);
+    updateConnectionStatus(connections.size);
 
     conn.on("data", (data) => {
       if (data.type === "chapter") {
@@ -92,6 +95,7 @@ async function initializePeer() {
     conn.on("close", () => {
       connections.delete(conn);
       console.log("Disconnected from peer:", conn.peer);
+      updateConnectionStatus(connections.size);
     });
   });
 }
@@ -204,33 +208,18 @@ function changeChapter(direction) {
 prevButton.addEventListener("click", () => changeChapter("prev"));
 nextButton.addEventListener("click", () => changeChapter("next"));
 
-// Add connection form
-const connectionForm = document.createElement("div");
-connectionForm.style.position = "fixed";
-connectionForm.style.top = "10px";
-connectionForm.style.right = "10px";
-connectionForm.style.padding = "10px";
-connectionForm.style.background = "rgba(0,0,0,0.7)";
-connectionForm.style.color = "white";
-connectionForm.style.borderRadius = "5px";
-
-const input = document.createElement("input");
-input.type = "text";
-input.placeholder = "Enter peer ID";
-input.style.marginRight = "5px";
-
-const connectButton = document.createElement("button");
-connectButton.textContent = "Connect";
-connectButton.onclick = () => {
-  if (input.value) {
-    connectToPeer(input.value);
-    input.value = "";
+// Update the connection status display
+function updateConnectionStatus(connectedPeers) {
+  if (connectedPeers > 0) {
+    connectionStatus.textContent = `Connected to ${connectedPeers} peer${
+      connectedPeers > 1 ? "s" : ""
+    }`;
+    connectionStatus.style.color = "#4CAF50";
+  } else {
+    connectionStatus.textContent = "Searching for peers...";
+    connectionStatus.style.color = "white";
   }
-};
-
-connectionForm.appendChild(input);
-connectionForm.appendChild(connectButton);
-document.body.appendChild(connectionForm);
+}
 
 // Initialize
 initializePeer();
