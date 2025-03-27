@@ -22,7 +22,7 @@ const chapters = [
   },
   {
     colors: ["red", "blue"],
-    interval: 250,
+    interval: 400,
   },
 ];
 
