@@ -26,6 +26,12 @@ const chapters = [
   },
 ];
 
+function calculateNextStartTime(interval) {
+  const now = Date.now();
+  const nextStart = Math.ceil(now / interval) * interval;
+  return nextStart;
+}
+
 function updateChapter() {
   // Clear existing interval
   if (intervalId) {
@@ -42,15 +48,26 @@ function updateChapter() {
   prevButton.disabled = currentChapter === 0;
   nextButton.disabled = currentChapter === chapters.length - 1;
 
-  // Set initial color
-  container.style.backgroundColor = chapters[currentChapter].colors[0];
+  const currentChapterConfig = chapters[currentChapter];
+  const nextStartTime = calculateNextStartTime(currentChapterConfig.interval);
 
-  // Start new interval
-  intervalId = setInterval(() => {
-    colorIndex = (colorIndex + 1) % chapters[currentChapter].colors.length;
-    container.style.backgroundColor =
-      chapters[currentChapter].colors[colorIndex];
-  }, chapters[currentChapter].interval);
+  // Set initial color
+  container.style.backgroundColor = currentChapterConfig.colors[0];
+
+  // Calculate delay until next start time
+  const delay = nextStartTime - Date.now();
+
+  // Start new interval after the delay
+  setTimeout(() => {
+    // Set initial color at start time
+    container.style.backgroundColor = currentChapterConfig.colors[0];
+
+    // Start the regular interval
+    intervalId = setInterval(() => {
+      colorIndex = (colorIndex + 1) % currentChapterConfig.colors.length;
+      container.style.backgroundColor = currentChapterConfig.colors[colorIndex];
+    }, currentChapterConfig.interval);
+  }, delay);
 }
 
 function changeChapter(direction) {
